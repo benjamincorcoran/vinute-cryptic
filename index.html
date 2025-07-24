@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinute Cryptic</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <h1 class="logo">Vinute Cryptic</h1>
+                <div class="nav-links">
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h2>Today's Clue</h2>
+                <div class="clue-container">
+                    <div class="clue-card">
+                        <div class="clue-text" id="dailyClue">
+                            Twats ruined Vince's end (5)
+                        </div>
+                        <div class="clue-meta">
+                            <span class="difficulty">Difficulty: Medium</span>
+                            <span class="length">7 letters</span>
+                        </div>
+                        <button class="play-btn" onclick="showAnswerInput()">Play</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="answer-section" id="answerSection" style="display: none;">
+            <div class="container">
+                <div class="answer-input">
+                    <input type="text" id="answerInput" placeholder="Enter your answer..." maxlength="7">
+                    <button onclick="checkAnswer()">Submit</button>
+                    <button onclick="showHint()">Hint</button>
+                </div>
+                <div class="feedback" id="feedback"></div>
+                <div class="play-again-container" id="playAgainContainer" style="display: none;">
+                    <button class="play-again-btn" onclick="playAgain()">🎲 Play Again</button>
+                </div>
+                <div class="hint" id="hint" style="display: none;">
+                    Think about rearranging letters...
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="#" onclick="showPrivacyPopup()" id="privacyLink">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Privacy Policy Popup -->
+    <div id="privacyPopup" class="popup-overlay" style="display: none;">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3>Privacy Policy</h3>
+                <button class="close-btn" onclick="closePrivacyPopup()">&times;</button>
+            </div>
+            <div class="popup-body">
+                <p>Don't tell no one or you'll be sleepin' with the fishies - hows that for privacy</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
