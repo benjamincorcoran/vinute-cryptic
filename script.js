@@ -30,7 +30,8 @@ async function loadCluesFromJSON() {
             clue: "Error loading clues - please refresh (5)",
             answer: "ERROR",
             hint: "Something went wrong loading the clues file",
-            difficulty: "Easy"
+            difficulty: "Easy",
+            author: "System"
         }];
     }
 }
@@ -50,6 +51,7 @@ function loadDailyClue() {
     document.getElementById('dailyClue').textContent = currentClue.clue;
     document.querySelector('.difficulty').textContent = `Difficulty: ${currentClue.difficulty}`;
     document.querySelector('.length').textContent = `${currentClue.answer.length} letters`;
+    document.getElementById('clueAuthor').textContent = currentClue.author || 'Anonymous';
 }
 
 function showAnswerInput() {
@@ -121,6 +123,7 @@ function playAgain() {
     document.getElementById('dailyClue').textContent = currentClue.clue;
     document.querySelector('.difficulty').textContent = `Difficulty: ${currentClue.difficulty}`;
     document.querySelector('.length').textContent = `${currentClue.answer.length} letters`;
+    document.getElementById('clueAuthor').textContent = currentClue.author || 'Anonymous';
     
     // Reset the input field
     document.getElementById('answerInput').value = '';
