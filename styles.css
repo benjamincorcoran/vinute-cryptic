@@ -1,4 +1,4 @@
-/* Reset and base styles */
+* Reset and base styles */
 * {
     margin: 0;
     padding: 0;
@@ -296,7 +296,10 @@ footer {
     color: white;
     text-align: center;
     padding: 2rem 0;
-    margin-top: 3rem;
+    margin-top: 1rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
 }
 
 .footer-links {
