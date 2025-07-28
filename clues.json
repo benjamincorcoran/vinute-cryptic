@@ -5,5 +5,19 @@
         "hint": "Ruined could be an anagram indicator",
         "difficulty": "Medium",
         "author": "Chris Marriott"
+    },
+    {
+        "clue": "Finally fools secure scrapheap for Vince's baby (3)",
+        "answer": "SEP",
+        "hint": "The definition is 'Vince's baby'",
+        "difficulty": "Medium",
+        "author": "Ben Corcoran"
+    },
+    {
+        "clue": "Vince's language announced how the story continues (6)",
+        "answer": "Sequel",
+        "hint": "Announced is a homophone indicator",
+        "difficulty": "Medium",
+        "author": "Chris Marriott"
     }
 ]

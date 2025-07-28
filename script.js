@@ -1,6 +1,7 @@
 // Cryptic clues will be loaded from JSON file
 let crypticClues = [];
 let currentClue = null;
+let currentClueIndex = 0;
 let userStats = {
     solved: 0,
     attempted: 0,
@@ -10,7 +11,7 @@ let userStats = {
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     loadCluesFromJSON().then(() => {
-        loadDailyClue();
+        loadCurrentClue();
         loadUserStats();
     });
 });
@@ -36,36 +37,63 @@ async function loadCluesFromJSON() {
     }
 }
 
-function loadDailyClue() {
+function loadCurrentClue() {
     // Ensure clues are loaded before selecting one
     if (!crypticClues || crypticClues.length === 0) {
         console.error('No clues available');
         return;
     }
     
-    // Get today's clue (use date to determine which clue to show)
-    const today = new Date();
-    const clueIndex = today.getDate() % crypticClues.length;
-    currentClue = crypticClues[clueIndex];
+    // Check if we've completed all clues
+    if (currentClueIndex >= crypticClues.length) {
+        showCompletionMessage();
+        return;
+    }
+    
+    // Load the current sequential clue
+    currentClue = crypticClues[currentClueIndex];
+    
+    // Update section title with progress
+    document.getElementById('sectionTitle').textContent = `Clue ${currentClueIndex + 1} of ${crypticClues.length}`;
     
     document.getElementById('dailyClue').textContent = currentClue.clue;
     document.querySelector('.difficulty').textContent = `Difficulty: ${currentClue.difficulty}`;
     document.querySelector('.length').textContent = `${currentClue.answer.length} letters`;
     document.getElementById('clueAuthor').textContent = currentClue.author || 'Anonymous';
+    
+    // Update input max length dynamically
+    const answerInputElement = document.getElementById('answerInput');
+    if (answerInputElement) {
+        answerInputElement.maxLength = currentClue.answer.length;
+    }
+    
+    // Reset inline answer input state
+    const playBtn = document.querySelector('.play-btn');
+    const answerContainer = document.getElementById('answerInputContainer');
+    const answerInput = document.getElementById('answerInput');
+    
+    if (playBtn) playBtn.style.display = 'block';
+    if (answerContainer) {
+        answerContainer.style.display = 'none';
+        answerContainer.classList.remove('show');
+    }
+    if (answerInput) answerInput.value = '';
 }
 
 function showAnswerInput() {
-    document.getElementById('answerSection').style.display = 'block';
-    document.getElementById('answerInput').focus();
+    // Hide the play button and show the answer input container
+    const playBtn = document.querySelector('.play-btn');
+    const answerContainer = document.getElementById('answerInputContainer');
+    const answerInput = document.getElementById('answerInput');
     
-    // Hide any previous play again button
-    document.getElementById('playAgainContainer').style.display = 'none';
+    if (playBtn) playBtn.style.display = 'none';
+    if (answerContainer) {
+        answerContainer.style.display = 'block';
+        answerContainer.classList.add('show');
+    }
     
-    // Scroll to answer section
-    document.getElementById('answerSection').scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'center'
-    });
+    // Focus on the input
+    if (answerInput) answerInput.focus();
 }
 
 function checkAnswer() {
@@ -82,22 +110,22 @@ function checkAnswer() {
     
     // Case insensitive comparison
     if (userAnswer === currentClue.answer.toUpperCase()) {
-        feedback.textContent = "🎉 Correct! Well done!";
-        feedback.className = "feedback correct";
         userStats.solved++;
         userStats.streak++;
         
         // Launch confetti animation
         launchConfetti();
         
-        // Show play again button
-        document.getElementById('playAgainContainer').style.display = 'block';
+        // Show success modal
+        showSuccessModal();
+        
+        // Clear feedback
+        feedback.textContent = "";
+        feedback.className = "feedback";
     } else {
         feedback.textContent = "❌ Not quite right. Try again!";
         feedback.className = "feedback incorrect";
         userStats.streak = 0;
-        // Hide play again button on incorrect answers
-        document.getElementById('playAgainContainer').style.display = 'none';
     }
     
     saveUserStats();
@@ -114,29 +142,75 @@ function showExplanation() {
     feedback.innerHTML += `<br><br><strong>Explanation:</strong> ${currentClue.hint}`;
 }
 
-function playAgain() {
-    // Select a random clue
-    const randomIndex = Math.floor(Math.random() * crypticClues.length);
-    currentClue = crypticClues[randomIndex];
+function showSuccessModal() {
+    document.getElementById('successAnswer').textContent = currentClue.answer.toUpperCase();
+    document.getElementById('successModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSuccessModal() {
+    document.getElementById('successModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function nextClue() {
+    closeSuccessModal();
+    currentClueIndex++;
     
-    // Update the clue display
-    document.getElementById('dailyClue').textContent = currentClue.clue;
-    document.querySelector('.difficulty').textContent = `Difficulty: ${currentClue.difficulty}`;
-    document.querySelector('.length').textContent = `${currentClue.answer.length} letters`;
-    document.getElementById('clueAuthor').textContent = currentClue.author || 'Anonymous';
+    // Reset the form (only if elements exist)
+    const answerInput = document.getElementById('answerInput');
+    const feedback = document.getElementById('feedback');
+    const hint = document.getElementById('hint');
     
-    // Reset the input field
+    if (answerInput) answerInput.value = '';
+    if (feedback) {
+        feedback.textContent = '';
+        feedback.className = 'feedback';
+    }
+    if (hint) hint.style.display = 'none';
+    
+    // Load next clue (this will reset the inline input state)
+    loadCurrentClue();
+    
+    // Update input max length (only if elements exist)
+    if (currentClue && answerInput) {
+        answerInput.maxLength = currentClue.answer.length;
+    }
+}
+
+function showCompletionMessage() {
+    document.getElementById('sectionTitle').textContent = '🎉 All Clues Completed!';
+    document.querySelector('.clue-card').innerHTML = `
+        <div class="completion-message">
+            <h3>Congratulations! 🎊</h3>
+            <p>You've successfully solved all ${crypticClues.length} cryptic clues!</p>
+            <div class="final-stats">
+                <p><strong>Clues Solved:</strong> ${userStats.solved}/${crypticClues.length}</p>
+                <p><strong>Total Attempts:</strong> ${userStats.attempted}</p>
+                <p><strong>Success Rate:</strong> ${userStats.attempted > 0 ? Math.round((userStats.solved / userStats.attempted) * 100) : 0}%</p>
+            </div>
+            <div class="completion-buttons">
+                <button class="prize-btn" onclick="claimPrize()">🎁 Claim Prize!</button>
+                <button class="restart-btn" onclick="restartGame()">Play Again</button>
+            </div>
+        </div>
+    `;
+}
+
+function restartGame() {
+    currentClueIndex = 0;
+    userStats.solved = 0;
+    userStats.attempted = 0;
+    userStats.streak = 0;
+    saveUserStats();
+    
+    // Reset UI
     document.getElementById('answerInput').value = '';
-    document.getElementById('answerInput').maxLength = currentClue.answer.length;
-    
-    // Hide and reset feedback elements
     document.getElementById('feedback').textContent = '';
     document.getElementById('feedback').className = 'feedback';
     document.getElementById('hint').style.display = 'none';
-    document.getElementById('playAgainContainer').style.display = 'none';
     
-    // Focus on the input field
-    document.getElementById('answerInput').focus();
+    loadCurrentClue();
 }
 
 function loadUserStats() {
@@ -246,7 +320,7 @@ function createConfettiPiece(color) {
     confetti.style.height = size + 'px';
     confetti.style.backgroundColor = color;
     confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-    confetti.style.zIndex = '9999';
+    confetti.style.zIndex = '10002'; // Higher than success modal (10001)
     confetti.style.pointerEvents = 'none';
     
     // Random shapes for maximum visual chaos
@@ -315,3 +389,138 @@ document.addEventListener('keydown', function(e) {
 
 // Initialize interactions when page loads
 setTimeout(addPageInteractions, 100);
+
+// Prize Animation Functions
+function claimPrize() {
+    const prizeOverlay = document.getElementById('prizeOverlay');
+    prizeOverlay.style.display = 'flex';
+    
+    // Check if we're in a modal or completion screen and dim accordingly
+    const modal = document.querySelector('.success-modal-content');
+    const clueCard = document.querySelector('.clue-card');
+    
+    if (modal && modal.style.opacity !== '0.3') {
+        modal.style.opacity = '0.3';
+    } else if (clueCard) {
+        clueCard.style.opacity = '0.3';
+    }
+}
+
+function openPresent() {
+    const present = document.querySelector('.present');
+    const prizeText = document.querySelector('.prize-text');
+    const overlay = document.getElementById('prizeOverlay');
+    
+    // Add screen shake effect
+    document.body.style.animation = 'screenShake 0.8s ease-out';
+    
+    // Add exploding animation to present
+    present.classList.add('exploding');
+    
+    // Create additional explosion particles
+    createExplosionParticles(overlay);
+    
+    // Show the prize text after explosion
+    setTimeout(() => {
+        present.style.display = 'none';
+        prizeText.style.display = 'block';
+        
+        // Add screen flash effect
+        createScreenFlash();
+        
+        // Auto-close after showing the prize
+        setTimeout(() => {
+            closePrizeOverlay();
+        }, 4000);
+    }, 800);
+}
+
+function createExplosionParticles(container) {
+    // Create multiple particle bursts
+    for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '8px';
+            particle.style.height = '8px';
+            particle.style.background = `hsl(${Math.random() * 60 + 40}, 100%, 60%)`;
+            particle.style.borderRadius = '50%';
+            particle.style.pointerEvents = 'none';
+            particle.style.left = '50%';
+            particle.style.top = '50%';
+            particle.style.zIndex = '10003';
+            particle.style.boxShadow = `0 0 10px ${particle.style.background}`;
+            
+            const angle = (Math.PI * 2 * i) / 20;
+            const velocity = 150 + Math.random() * 100;
+            const duration = 800 + Math.random() * 400;
+            
+            particle.style.animation = `particleBurst ${duration}ms ease-out forwards`;
+            particle.style.setProperty('--angle', angle);
+            particle.style.setProperty('--velocity', velocity + 'px');
+            
+            container.appendChild(particle);
+            
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, duration);
+        }, i * 20);
+    }
+}
+
+function createScreenFlash() {
+    const flash = document.createElement('div');
+    flash.style.position = 'fixed';
+    flash.style.top = '0';
+    flash.style.left = '0';
+    flash.style.width = '100%';
+    flash.style.height = '100%';
+    flash.style.background = 'rgba(255, 255, 255, 0.9)';
+    flash.style.zIndex = '10004';
+    flash.style.pointerEvents = 'none';
+    flash.style.animation = 'screenFlash 0.3s ease-out';
+    
+    document.body.appendChild(flash);
+    
+    setTimeout(() => {
+        if (flash.parentNode) {
+            flash.parentNode.removeChild(flash);
+        }
+    }, 300);
+}
+
+function closePrizeOverlay() {
+    const prizeOverlay = document.getElementById('prizeOverlay');
+    const present = document.querySelector('.present');
+    const prizeText = document.querySelector('.prize-text');
+    
+    // Reset everything
+    prizeOverlay.style.display = 'none';
+    present.style.display = 'block';
+    present.classList.remove('exploding');
+    prizeText.style.display = 'none';
+    
+    // Remove screen shake
+    document.body.style.animation = '';
+    
+    // Clean up any remaining particles
+    const particles = document.querySelectorAll('[style*="particleBurst"]');
+    particles.forEach(particle => {
+        if (particle.parentNode) {
+            particle.parentNode.removeChild(particle);
+        }
+    });
+    
+    // Restore content opacity
+    const modal = document.querySelector('.success-modal-content');
+    const clueCard = document.querySelector('.clue-card');
+    
+    if (modal) {
+        modal.style.opacity = '1';
+    }
+    if (clueCard) {
+        clueCard.style.opacity = '1';
+    }
+}
